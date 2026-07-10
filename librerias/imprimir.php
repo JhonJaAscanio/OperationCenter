@@ -1,6 +1,7 @@
 <?php
 require_once "configuraciones.php";
 require_once "servidor.php";
+require_once "Repositorio.php";
 include '../modelos/ventas_MO.php';
 include '../modelos/clientes_MO.php';
 $id_factura=$_GET['id_factura'];

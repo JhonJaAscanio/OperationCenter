@@ -1,80 +1,33 @@
 <?php
-class proveedores_MO
+class proveedores_MO extends Repositorio
 {
-	private $conexion;
-
 	function __construct($conexion)
 	{
-		$this->conexion = $conexion;
+		parent::__construct($conexion, "proveedores", "id_proveedor");
 	}
-
 
 	function agregar($nombre, $telefono, $direccion, $ciudad)
 	{
-		$sql = "INSERT INTO proveedores ( nombre,telefono,direccion,ciudad) VALUES ('$nombre','$telefono','$direccion','$ciudad')";
-
-		$filas_afectadas = $this->conexion->consulta($sql);
-
-		return $filas_afectadas;
+		return $this->insertar([
+			"nombre" => $nombre,
+			"telefono" => $telefono,
+			"direccion" => $direccion,
+			"ciudad" => $ciudad,
+		]);
 	}
 
 	function actualizar($id_proveedor, $nombre, $telefono, $direccion, $ciudad)
 	{
-
-		$sql = "UPDATE proveedores SET nombre='$nombre',telefono='$telefono', direccion='$direccion',ciudad='$ciudad' WHERE id_proveedor='$id_proveedor'";
-
-		$filas_afectadas = $this->conexion->consulta($sql);
-
-		return $filas_afectadas;
+		return $this->modificar($id_proveedor, [
+			"nombre" => $nombre,
+			"telefono" => $telefono,
+			"direccion" => $direccion,
+			"ciudad" => $ciudad,
+		]);
 	}
-
-
-	function seleccionar($atributo = '', $valor = '')
-	{
-		$condicion = "";
-
-		if ($atributo && $valor) {
-			$condicion = " WHERE $atributo='$valor'";
-		}
-
-		$sql = "SELECT * FROM proveedores $condicion";
-
-		$this->conexion->consulta($sql);
-
-		$arreglo_accesos = $this->conexion->extraerRegistro();
-
-		return $arreglo_accesos;
-	}
-
-
 
 	function unico($nombre, $id_proveedor = '')
 	{
-		if (empty($id_Proveedores)) {
-			//AGREGAR
-			$sql = "SELECT * FROM proveedores
-	                 WHERE nombre='$nombre'";
-		} else {
-			//ACTUALIAZAR
-			$sql = "SELECT * FROM proveedores
-	                 WHERE nombre='$nombre'
-	                 AND id_proveedor!='$id_proveedor'";
-		}
-
-		$this->conexion->consulta($sql);
-
-		$arreglo_accesos = $this->conexion->extraerRegistro();
-
-		return $arreglo_accesos;
-	}
-
-
-	function eliminar($id_proveedor)
-	{
-		$sql = "DELETE FROM proveedores WHERE id_proveedor='$id_proveedor'";
-
-		$filas_afectadas = $this->conexion->consulta($sql);
-
-		return $filas_afectadas;
+		return $this->existeValorUnico("nombre", $nombre, $id_proveedor);
 	}
 }

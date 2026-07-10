@@ -1,136 +1,98 @@
 <?php
-	class compras_MO
+class compras_MO extends Repositorio
+{
+	function __construct($conexion)
 	{
-    	private $conexion;
+		parent::__construct($conexion, "compras", "id_compra");
+	}
 
-    	function __construct($conexion)
-    	{
-        	$this->conexion=$conexion;
-    	}
+	function agregar($id_factura, $proveedor, $total, $abono, $pago)
+	{
+		return $this->insertar([
+			"id_factura" => $id_factura,
+			"proveedor" => $proveedor,
+			"total" => $total,
+			"abono" => $abono,
+			"pago" => $pago,
+		]);
+	}
 
+	function agregarArticulo($id_factura, $codigo, $cantidad, $descripcion, $precio_unitario, $precio_total)
+	{
+		$sql = "INSERT INTO articulos_compra (id_factura,codigo,cantidad,descripcion,precio_unitario,precio_total) VALUES (:id_factura,:codigo,:cantidad,:descripcion,:precio_unitario,:precio_total)";
 
-    	function agregar($id_factura, $proveedor,$total,$abono,$pago)
-    	{
-	        $sql= "INSERT INTO compras (id_factura,proveedor,total,abono,pago) VALUES ('$id_factura','$proveedor','$total','$abono', '$pago')";
+		return $this->conexion->consultaPreparada($sql, [
+			':id_factura' => $id_factura,
+			':codigo' => $codigo,
+			':cantidad' => $cantidad,
+			':descripcion' => $descripcion,
+			':precio_unitario' => $precio_unitario,
+			':precio_total' => $precio_total,
+		]);
+	}
 
-	        $filas_afectadas=$this->conexion->consulta($sql);
+	function actualizar($id_compra, $id_factura, $proveedor, $total, $abono, $pago)
+	{
+		return $this->modificar($id_compra, [
+			"id_factura" => $id_factura,
+			"proveedor" => $proveedor,
+			"total" => $total,
+			"abono" => $abono,
+			"pago" => $pago,
+		]);
+	}
 
-	        return $filas_afectadas;
-	    
-	    }
+	function seleccionarArticulo($id)
+	{
+		$sql = "SELECT * FROM articulos_compra WHERE id_factura = :id";
 
-	     function agregarArticulo( $id_factura,$codigo,$cantidad,$descripcion,$precio_unitario, $precio_total)
-    	{
-	        $sql= "INSERT INTO articulos_compra (id_factura,codigo,cantidad,descripcion,precio_unitario,precio_total) VALUES ('$id_factura','$codigo','$cantidad','$descripcion', '$precio_unitario','$precio_total')";
+		$this->conexion->consultaPreparada($sql, [':id' => $id]);
 
-	        $filas_afectadas=$this->conexion->consulta($sql);
+		return $this->conexion->extraerRegistro();
+	}
 
-	        return $filas_afectadas;
-	    
-	    }
-
-		function actualizar($id_compra, $id_factura, $proveedor,$total,$abono,$pago)
-	    {
-	        
-	        $sql = "UPDATE compras SET id_factura='$id_factura', proveedor='$proveedor',total='$total', abono='$abono', pago='$pago' WHERE id_compra='$id_compra'";
-
-	        $filas_afectadas=$this->conexion->consulta($sql);
-
-	        return $filas_afectadas;
-	    }
-
-
-		function seleccionar($atributo='',$valor='')
+	function seleccionarMayor($atributo = '', $valor = '')
+	{
+		if ($atributo && $valor)
 		{
-	        $condicion="";
-	        
-	        if($atributo && $valor)
-	        {
-	            $condicion = " WHERE $atributo='$valor'";
-	        }
-
-	        $sql = "SELECT * FROM compras $condicion";
-	        
-	        $this->conexion->consulta($sql);
-
-	        $arreglo_accesos=$this->conexion->extraerRegistro();
-
-	        return $arreglo_accesos;
-	    } 
-
-		function seleccionarArticulo($id)
+			$sql = "SELECT id_factura FROM {$this->tabla} WHERE $atributo = :valor";
+			$this->conexion->consultaPreparada($sql, [':valor' => $valor]);
+		}
+		else
 		{
-			$sql = "SELECT * FROM articulos_compra WHERE id_factura='$id'";
-	        
-	        $this->conexion->consulta($sql);
-
-	        $arreglo_accesos=$this->conexion->extraerRegistro();
-
-	        return $arreglo_accesos;
+			$sql = "SELECT id_factura FROM {$this->tabla} WHERE id_factura = (SELECT MAX(id_factura) FROM {$this->tabla})";
+			$this->conexion->consultaPreparada($sql);
 		}
 
-		function seleccionarMayor($atributo='',$valor='')
+		return $this->conexion->extraerRegistro();
+	}
+
+	// NOTA: se preserva el comportamiento original (bug preexistente reportado
+	// aparte): la rama "AGREGAR" filtra por id_compra en vez de id_factura, por lo
+	// que esta validacion no bloquea duplicados al agregar una compra. No se
+	// corrige en esta migracion para no alterar comportamiento sin confirmacion.
+	function unico($id_factura, $id_compra = '')
+	{
+		if (empty($id_compra))
 		{
-	        $condicion="WHERE id_factura = (SELECT MAX(id_factura) FROM compras) ";
-	        
-	        if($atributo && $valor)
-	        {
-	            $condicion = " WHERE $atributo='$valor'";
-	        }
-
-	        $sql = "SELECT id_factura FROM compras $condicion";
-	        
-	        $this->conexion->consulta($sql);
-
-	        $arreglo_accesos=$this->conexion->extraerRegistro();
-
-	        return $arreglo_accesos;
-	    }
-
-	    function unico($id_factura, $id_compra='')
+			$sql = "SELECT * FROM {$this->tabla} WHERE {$this->llavePrimaria} = :id_compra";
+			$parametros = [':id_compra' => $id_compra];
+		}
+		else
 		{
-	    	if (empty($id_Proveedores)) 
-	    	{
-	        //AGREGAR
-	        $sql = "SELECT * FROM compras
-	                 WHERE id_compra='$id_compra'";
-	    	}
-	    	else
-	    	{
-	         //ACTUALIAZAR
-	        $sql="SELECT * FROM compras
-	                 WHERE id_factura='$id_factura' 
-	                 AND id_compra!='$id_compra'";
-	    	}
-
-		    $this->conexion->consulta($sql);
-
-		    $arreglo_accesos=$this->conexion->extraerRegistro();
-
-		    return $arreglo_accesos;
+			$sql = "SELECT * FROM {$this->tabla} WHERE id_factura = :id_factura AND {$this->llavePrimaria} != :id_compra";
+			$parametros = [':id_factura' => $id_factura, ':id_compra' => $id_compra];
 		}
 
+		$this->conexion->consultaPreparada($sql, $parametros);
 
-		function eliminar($id_compra)
-		{
-	        $sql = "DELETE FROM compras WHERE id_compra='$id_compra'";
-	        
-	        $filas_afectadas=$this->conexion->consulta($sql);
+		return $this->conexion->extraerRegistro();
+	}
 
-	        return $filas_afectadas;
-	    } 
+	function eliminarArticulo($id_articulo)
+	{
+		$sql = "DELETE FROM articulos_compra WHERE id_articulo_compra = :id";
 
-	     function eliminarArticulo($id_articulo)
-		{
-	        $sql = "DELETE FROM articulos_compra WHERE id_articulo_compra='$id_articulo'";
-	        
-	        $filas_afectadas=$this->conexion->consulta($sql);
-
-	        return $filas_afectadas;
-	    } 
-
-
-
-
-    }
-?>
+		return $this->conexion->consultaPreparada($sql, [':id' => $id_articulo]);
+	}
+}
