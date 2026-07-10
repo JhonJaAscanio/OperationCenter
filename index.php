@@ -3,6 +3,7 @@ require_once "librerias/configuraciones.php";
 require_once "librerias/servidor.php";
 require_once "librerias/controlador.php";
 require_once "librerias/funciones.php";
+require_once "librerias/Repositorio.php";
 date_default_timezone_set('America/Bogota');
 
 if (isset($_SESSION["autenticado"]) && $_SESSION["autenticado"] == "SI") {

@@ -54,6 +54,18 @@ class servidor
 
     }
 
+    // Igual que consulta(), pero con parametros bindeados via prepared statement,
+    // para evitar concatenar valores directamente en el SQL.
+    function consultaPreparada($sql, $parametros = array())
+    {
+        $sentencia = $this->conexion->prepare($sql) or $this->errorQuery();
+        $sentencia->execute($parametros) or $this->errorQuery();
+
+        $this->resultado = $sentencia;
+
+        return $this->resultado->rowCount(); //Solo para los INSERT, UPDATE Y DELETE
+    }
+
     function errorQuery()
     {
         $respuesta = [
