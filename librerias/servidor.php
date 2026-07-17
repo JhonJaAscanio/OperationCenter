@@ -66,6 +66,29 @@ class servidor
         return $this->resultado->rowCount(); //Solo para los INSERT, UPDATE Y DELETE
     }
 
+    function obtenerUltimoId()
+    {
+        return $this->conexion->lastInsertId();
+    }
+
+    function iniciarTransaccion()
+    {
+        return $this->conexion->beginTransaction();
+    }
+
+    function confirmarTransaccion()
+    {
+        return $this->conexion->commit();
+    }
+
+    function revertirTransaccion()
+    {
+        if ($this->conexion->inTransaction())
+        {
+            $this->conexion->rollBack();
+        }
+    }
+
     function errorQuery()
     {
         $respuesta = [

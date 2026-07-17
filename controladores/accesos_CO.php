@@ -27,6 +27,7 @@ class accesos_CO
         if($arreglo_accesos)
         {
             $_SESSION["id_usuario"]=$arreglo_accesos[0]->id_usuario;
+            $_SESSION["rol"]=$arreglo_accesos[0]->rol;
             $_SESSION["autenticado"]="SI";
             header("Location: index.php");
         }
@@ -45,6 +46,9 @@ class accesos_CO
  
     function agregar()
     {
+        $f=new funciones();
+        $f->validarCSRF();
+
      //   $id_estudiantes=$_POST["id_usuario"];
         $usuario=$_POST["usuario"];
         $clave=$_POST["clave"];
@@ -102,6 +106,8 @@ class accesos_CO
 
     function actualizar()
     {
+        $f=new funciones();
+        $f->validarCSRF();
 
         $id_accesos = $_POST["id_accesos"];
         $usuario=$_POST["usuario"];
@@ -180,7 +186,9 @@ function cerrarSesion($arreglo_url)
 
 
 function activo()
-{    
+{
+     $f=new funciones();
+     $f->validarCSRF();
 
      $conexion=new servidor('A');
      $accesos_MO=new accesos_MO($conexion);

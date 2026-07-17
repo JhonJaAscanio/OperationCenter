@@ -4,6 +4,7 @@ require_once "modelos/productos_MO.php";
 
 $f = new funciones();
 $f->limpiarMatriz($_POST);
+$f->validarCSRF();
 
 class compras_CO
 {
@@ -75,21 +76,22 @@ class compras_CO
 		} else {
 			$id_producto = $arreglo_productos[0]->id_producto;
 			$codigo = $arreglo_productos[0]->codigo;
-			$cantidad_bodega = $arreglo_productos[0]->cantidad_bodega;
 			$descripcion = $arreglo_productos[0]->descripcion;
-			$cantidad_total = ($cantidad_bodega) + ($cantidad);
-			$arreglo_productos = $productos_MO->sumar_cantidad($id_producto, $cantidad_total);  //Sumar cantidad al stock del producto
-
 			$precio_total = $precio * $cantidad;
+
+			$conexion->iniciarTransaccion();
+			$productos_MO->sumar_cantidad($id_producto, $cantidad);  //Sumar cantidad al stock del producto
 			$filas_afectadas = $compras_MO->agregarArticulo($id_factura, $codigo, $cantidad, $descripcion, $precio, $precio_total);
 
 			if ($filas_afectadas) {
+				$conexion->confirmarTransaccion();
 				$respuesta = [
 					"estado" => "EXITO",
 					'mensaje' => "EXITO: Articulo añadido",
 
 				];
 			} else {
+				$conexion->revertirTransaccion();
 				$respuesta = [
 					"estado" => "ADVERTENCIA",
 					'mensaje' => "ADVERTENCIA: No se añadio el articulo"
@@ -172,22 +174,31 @@ class compras_CO
 		$codigo = $_POST["codigo"];
 		$conexion = new servidor('A');
 		$compras_MO = new compras_MO($conexion);
-		$arreglo_articulos = $compras_MO->eliminarArticulo($id_articulo);
-
 		$productos_MO = new productos_MO($conexion);
 		$arreglo_productos = $productos_MO->seleccionar("codigo", $codigo);
 
+		$conexion->iniciarTransaccion();
+		$arreglo_articulos = $compras_MO->eliminarArticulo($id_articulo);
+
 		if ($arreglo_articulos) {
 			$id_producto = $arreglo_productos[0]->id_producto;
-			$cantidad_bodega = $arreglo_productos[0]->cantidad_bodega;
-			$cantidad_total = $cantidad_bodega - $cantidad;
-			$arreglo_productos = $productos_MO->disminuir_cantidad($id_producto, $cantidad_total);
+			$filas_stock = $productos_MO->disminuir_cantidad($id_producto, $cantidad);
 
-			$respuesta = [
-				"estado" => "EXITO",
-				'mensaje' => "EXITO: El Articulo se elimino correctamente"
-			];
+			if ($filas_stock) {
+				$conexion->confirmarTransaccion();
+				$respuesta = [
+					"estado" => "EXITO",
+					'mensaje' => "EXITO: El Articulo se elimino correctamente"
+				];
+			} else {
+				$conexion->revertirTransaccion();
+				$respuesta = [
+					"estado" => "ADVERTENCIA",
+					'mensaje' => "ADVERTENCIA: No hay suficiente stock para revertir esta compra"
+				];
+			}
 		} else {
+			$conexion->revertirTransaccion();
 			$respuesta = [
 				"estado" => "ADVERTENCIA",
 				'mensaje' => "ADVERTENCIA: El Articulo no se pudo eliminar, intente mas tarde"

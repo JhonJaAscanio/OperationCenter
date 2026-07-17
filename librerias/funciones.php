@@ -36,6 +36,24 @@ class funciones
 	  return $texto;	
     }
 
+	// Corta la ejecucion con un JSON de error si el token CSRF de la peticion
+	// no coincide con el de la sesion. Usar en rutas que modifican datos.
+	function validarCSRF()
+	{
+		$token_recibido = isset($_POST['csrf_token']) ? $_POST['csrf_token'] : '';
+		$token_sesion = isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '';
+
+		if (!$token_sesion || !hash_equals($token_sesion, $token_recibido))
+		{
+			$respuesta = [
+				"estado" => "ERROR",
+				'mensaje' => "ERROR: Token de seguridad invalido o expirado, recargue la pagina"
+			];
+			echo json_encode($respuesta);
+			exit;
+		}
+	}
+
     function obtenerIp()
 	{
 		$ip="";

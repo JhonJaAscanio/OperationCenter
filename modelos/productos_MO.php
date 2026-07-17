@@ -42,13 +42,28 @@ class productos_MO extends Repositorio
 		return $this->existeValorUnico("codigo", $codigo, $id_producto);
 	}
 
+	// Resta $cantidad de forma atomica (no un SET absoluto), con guarda de stock
+	// suficiente en la misma sentencia para evitar condiciones de carrera entre
+	// ventas/compras concurrentes. Devuelve 0 filas afectadas si no hay stock.
 	function disminuir_cantidad($id, $cantidad)
 	{
-		return $this->modificar($id, ["cantidad_bodega" => $cantidad]);
+		$sql = "UPDATE {$this->tabla} SET cantidad_bodega = cantidad_bodega - :cantidad WHERE {$this->llavePrimaria} = :id AND cantidad_bodega >= :cantidad_disponible";
+
+		return $this->conexion->consultaPreparada($sql, [
+			':cantidad' => $cantidad,
+			':cantidad_disponible' => $cantidad,
+			':id' => $id,
+		]);
 	}
 
+	// Suma $cantidad de forma atomica (no un SET absoluto).
 	function sumar_cantidad($id, $cantidad)
 	{
-		return $this->modificar($id, ["cantidad_bodega" => $cantidad]);
+		$sql = "UPDATE {$this->tabla} SET cantidad_bodega = cantidad_bodega + :cantidad WHERE {$this->llavePrimaria} = :id";
+
+		return $this->conexion->consultaPreparada($sql, [
+			':cantidad' => $cantidad,
+			':id' => $id,
+		]);
 	}
 }

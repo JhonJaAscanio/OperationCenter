@@ -3,6 +3,11 @@
 
 	session_start();
 
+	if (empty($_SESSION['csrf_token']))
+	{
+		$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+	}
+
 	const IP_MAQUINA="localhost";
 	//const IP_MAQUINA="sql108.epizy.com";
 	const BASE_DE_DATOS="venta";

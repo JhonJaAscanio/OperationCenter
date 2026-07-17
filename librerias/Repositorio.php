@@ -40,7 +40,14 @@ abstract class Repositorio
     {
         $sql = "DELETE FROM {$this->tabla} WHERE {$this->llavePrimaria} = :id";
 
-        return $this->conexion->consultaPreparada($sql, [':id' => $id]);
+        $filas = $this->conexion->consultaPreparada($sql, [':id' => $id]);
+
+        if ($filas)
+        {
+            $this->registrarBitacora('ELIMINAR', $id);
+        }
+
+        return $filas;
     }
 
     // $campos: arreglo asociativo columna => valor
@@ -57,7 +64,14 @@ abstract class Repositorio
             $parametros[":$columna"] = $valor;
         }
 
-        return $this->conexion->consultaPreparada($sql, $parametros);
+        $filas = $this->conexion->consultaPreparada($sql, $parametros);
+
+        if ($filas)
+        {
+            $this->registrarBitacora('AGREGAR', $this->conexion->obtenerUltimoId());
+        }
+
+        return $filas;
     }
 
     // $campos: arreglo asociativo columna => valor
@@ -74,7 +88,30 @@ abstract class Repositorio
         }
         $parametros[':id_registro'] = $id;
 
-        return $this->conexion->consultaPreparada($sql, $parametros);
+        $filas = $this->conexion->consultaPreparada($sql, $parametros);
+
+        if ($filas)
+        {
+            $this->registrarBitacora('ACTUALIZAR', $id);
+        }
+
+        return $filas;
+    }
+
+    // Registra en la tabla "bitacora" quien hizo que accion sobre que registro.
+    // No pasa por insertar() para no auto-registrarse recursivamente.
+    private function registrarBitacora($accion, $id_registro)
+    {
+        $id_usuario = isset($_SESSION['id_usuario']) ? $_SESSION['id_usuario'] : null;
+
+        $sql = "INSERT INTO bitacora (id_usuario, tabla, accion, id_registro) VALUES (:id_usuario, :tabla, :accion, :id_registro)";
+
+        $this->conexion->consultaPreparada($sql, [
+            ':id_usuario' => $id_usuario,
+            ':tabla' => $this->tabla,
+            ':accion' => $accion,
+            ':id_registro' => $id_registro,
+        ]);
     }
 
     // Busca registros con $campo = $valor, excluyendo opcionalmente $idExcluir

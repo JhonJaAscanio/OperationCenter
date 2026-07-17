@@ -540,6 +540,22 @@ scratch. This page gets rid of all links and provides the needed markup only.
       <!--<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>-->
       <script src="dist/js/jquery-3.6.0.js"></script>
 
+      <script>
+        // Token CSRF: se agrega automaticamente a toda peticion POST hecha con
+        // $.post/$.ajax, sin tener que tocar cada llamada AJAX individualmente.
+        var CSRF_TOKEN = "<?php echo $_SESSION['csrf_token']; ?>";
+        $.ajaxPrefilter(function(options) {
+          if (options.type && options.type.toUpperCase() === 'POST') {
+            if (typeof options.data === 'string') {
+              options.data += (options.data ? '&' : '') + 'csrf_token=' + encodeURIComponent(CSRF_TOKEN);
+            } else {
+              options.data = options.data || {};
+              options.data.csrf_token = CSRF_TOKEN;
+            }
+          }
+        });
+      </script>
+
       <script type="text/javascript" src="dist/js/jquery-ui-1.13.2/jquery-ui.js"></script>
       <!-- <script src="dist/plugins/jquery/jquery.min.js"></script>-->
       <!-- <script src="https://code.jquery.com/jquery-3.6.3.js" integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>  -->

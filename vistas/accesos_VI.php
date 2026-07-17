@@ -312,10 +312,10 @@ class accesos_VI
       <div class="card-body">
         <form id="formulario_actualizar_accesos" method="post">
 
-          <input type="hidden" id="id_accesos" name="id_accesos" value="<?php echo $id_accesos; ?>">
-          <input class="form-control form-control-lg" type="text" id="usuario" name="usuario" placeholder="Usuario" value="<?php echo $usuario; ?>" autocomplete="on">
+          <input type="hidden" id="id_accesos" name="id_accesos" value="<?php echo htmlspecialchars($id_accesos, ENT_QUOTES); ?>">
+          <input class="form-control form-control-lg" type="text" id="usuario" name="usuario" placeholder="Usuario" value="<?php echo htmlspecialchars($usuario, ENT_QUOTES); ?>" autocomplete="on">
           <br>
-          <input class="form-control form-control-lg" type="password" id="clave" name="clave" placeholder="Clave" value="<?php echo $clave; ?>" autocomplete="on">
+          <input class="form-control form-control-lg" type="password" id="clave" name="clave" placeholder="Clave" autocomplete="new-password">
 
           <br><br>
 

@@ -5,10 +5,11 @@
 	require_once "dist/dompdf/src/Autoloader.php";
     use Dompdf\Dompdf;
     use Dompdf\Autoloader;
-	$f=new funciones();	
+	$f=new funciones();
 	$f->limpiarMatriz($_POST);
+	$f->validarCSRF();
 
-	class ventas_CO 
+	class ventas_CO
 	{
 		function __construct(){}
 
@@ -44,19 +45,33 @@
 
 			    		if($precio>$precio_costo)
 			    		{
-			    			$filas_afectadas=$ventas_MO->agregarVenta($codigo,$descripcion,$cantidad,$precio,$total); 
-			    		
-				    		if($filas_afectadas) 
-						    {		  
-						    	$cantidad_restante=$cantidad_bodega - $cantidad;
-				        		$arreglo_productos=$productos_MO->disminuir_cantidad($id_producto,$cantidad_restante);
-						    	$respuesta = [
-						                    "estado" => "EXITO",
-						                    'mensaje' => "EXITO: Venta agregada"
-					                	];
+			    			$conexion->iniciarTransaccion();
+			    			$filas_afectadas=$ventas_MO->agregarVenta($codigo,$descripcion,$cantidad,$precio,$total);
+
+				    		if($filas_afectadas)
+						    {
+				        		$filas_stock=$productos_MO->disminuir_cantidad($id_producto,$cantidad);
+
+				        		if($filas_stock)
+				        		{
+				        			$conexion->confirmarTransaccion();
+							    	$respuesta = [
+							                    "estado" => "EXITO",
+							                    'mensaje' => "EXITO: Venta agregada"
+						                	];
+				        		}
+				        		else
+				        		{
+				        			$conexion->revertirTransaccion();
+				        			$respuesta = [
+				                  			"estado" => "ADVERTENCIA",
+				                    		'mensaje' => "ADVERTENCIA: Cantidad insuficiente en bodega"
+				                	];
+				        		}
 				        	}
 				        	else
 				        	{
+				        		$conexion->revertirTransaccion();
 				                $respuesta = [
 				                  	"estado" => "ADVERTENCIA",
 				                    'mensaje' => "ADVERTENCIA: No se registro la venta, intentelo de nuevo"
@@ -195,27 +210,41 @@
 
 				if($cantidad <= $cantidad_bodega)
 				{
-					$cantidad_restante=$cantidad_bodega - $cantidad;
-	        		$arreglo_productos=$productos_MO->disminuir_cantidad($id_producto,$cantidad_restante);
-	        		$precio_total = $precio * $cantidad ;
-	
+					$conexion->iniciarTransaccion();
+	        		$filas_stock=$productos_MO->disminuir_cantidad($id_producto,$cantidad);
+
+	        		if(!$filas_stock)
+	        		{
+	        			$conexion->revertirTransaccion();
+	        			$respuesta = [
+	                  			"estado" => "ADVERTENCIA",
+	                    		'mensaje' => "ADVERTENCIA: Cantidad insuficiente en bodega"
+	                	];
+	        		}
+	        		else
+	        		{
+	        			$precio_total = $precio * $cantidad ;
+
 			            $filas_afectadas=$ventas_MO->agregarArticulo( $id_factura,$articulo,$cantidad,$descripcion, $precio,$precio_total);
 
 			            if($filas_afectadas)
 			            {
+			            	$conexion->confirmarTransaccion();
 		   	                $respuesta = [
 			                    "estado" => "EXITO",
 			                    'mensaje' => "EXITO: Articulo añadido",
-			                   
+
 		                	];
 		            	}
 		            	else
 		            	{
+		            		$conexion->revertirTransaccion();
 			                $respuesta = [
 			                  	"estado" => "ADVERTENCIA",
 			                    'mensaje' => "ADVERTENCIA: No se añadio el articulo"
 			                ];
 			            }
+	        		}
 
 			    }else{
 			    	 $respuesta = [
@@ -307,17 +336,17 @@
     		$codigo=$_POST["codigo"];
     		$conexion=new servidor('A');
 			$ventas_MO=new ventas_MO($conexion);
-			$arreglo_articulos=$ventas_MO->eliminarArticulo($id_articulo);
-
 			$productos_MO=new productos_MO($conexion);
 			$arreglo_productos=$productos_MO->seleccionar("codigo",$codigo);
+
+			$conexion->iniciarTransaccion();
+			$arreglo_articulos=$ventas_MO->eliminarArticulo($id_articulo);
 
 			if($arreglo_articulos)
 			{
 				$id_producto=$arreglo_productos[0]->id_producto;
-				$cantidad_bodega=$arreglo_productos[0]->cantidad_bodega;
-				$cantidad_total=$cantidad_bodega+$cantidad;
-				$arreglo_productos=$productos_MO->sumar_cantidad($id_producto,$cantidad_total);
+				$productos_MO->sumar_cantidad($id_producto,$cantidad);
+				$conexion->confirmarTransaccion();
 
 				$respuesta = [
 		            "estado" => "EXITO",
@@ -325,6 +354,7 @@
 		            ];
 			}else
 			{
+				$conexion->revertirTransaccion();
 				$respuesta = [
 		            "estado" => "ADVERTENCIA",
 		            'mensaje' => "ADVERTENCIA: El Articulo no se pudo eliminar, intente mas tarde"
@@ -340,18 +370,20 @@
     		$conexion=new servidor('A');
 			$ventas_MO=new ventas_MO($conexion);
 			$arreglo_venta_mostrador=$ventas_MO->seleccionar_mostrador('id_venta_mostrador',  $id_venta_mostrador);
-			$arreglo_eliminado=$ventas_MO->eliminarVenta($id_venta_mostrador);
 
 			$productos_MO=new productos_MO($conexion);
 			$codigo=$arreglo_venta_mostrador[0]->codigo;
 			$cantidad=$arreglo_venta_mostrador[0]->cantidad;
 			$arreglo_productos=$productos_MO->seleccionar("codigo",$codigo);
 			$id_producto= $arreglo_productos[0]->id_producto;
+
+			$conexion->iniciarTransaccion();
+			$arreglo_eliminado=$ventas_MO->eliminarVenta($id_venta_mostrador);
+
 			if($arreglo_eliminado)
 			{
-				$cantidad_bodega=$arreglo_productos[0]->cantidad_bodega;
-				$cantidad_total=$cantidad_bodega+$cantidad;
-				$arreglo_productos=$productos_MO->sumar_cantidad($id_producto,$cantidad_total);
+				$productos_MO->sumar_cantidad($id_producto,$cantidad);
+				$conexion->confirmarTransaccion();
 
 				$respuesta = [
 		            "estado" => "EXITO",
@@ -359,6 +391,7 @@
 		            ];
 			}else
 			{
+				$conexion->revertirTransaccion();
 				$respuesta = [
 		            "estado" => "ADVERTENCIA",
 		            'mensaje' => "ADVERTENCIA: El Articulo no se pudo eliminar, intente mas tarde"

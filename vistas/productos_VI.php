@@ -55,16 +55,16 @@ class productos_VI
 
 						?>
 								<tr>
-									<td><?php echo $codigo; ?></td>
-									<td><?php echo $referencia; ?></td>
-									<td><?php echo $descripcion; ?></td>
+									<td><?php echo htmlspecialchars($codigo, ENT_QUOTES); ?></td>
+									<td><?php echo htmlspecialchars($referencia, ENT_QUOTES); ?></td>
+									<td><?php echo htmlspecialchars($descripcion, ENT_QUOTES); ?></td>
 									<td><?php echo $cantidad; ?></td>
 									<td><?php echo number_format($precio_general); ?></td>
-									<td><?php echo $ubicacion; ?></td>
+									<td><?php echo htmlspecialchars($ubicacion, ENT_QUOTES); ?></td>
 									<td style="text-align:center;">
-										<i class="fas fa-edit" style="cursor:pointer; margin-right: 10px; color: #0C6766;" data-toggle="modal" data-target="#ventana_modal" onclick="vistaActualizarProducto('<?php echo $id_producto; ?>')" title="Actualizar"></i>
-										<i class="far fa-eye" style="cursor:pointer; margin-right: 10px;color: #697E0A;" data-toggle="modal" data-target="#ventana_modal" onclick="vistaConsultarProducto('<?php echo $id_producto; ?>')" title="Consultar"></i>
-										<i class="fas fa-trash" style="cursor:pointer; margin-right: 10px;color: #870B0B;" data-toggle="modal" data-target="#ventana_modal" onclick="vistaEliminarProducto('<?php echo $id_producto; ?>')" title="Eliminar "></i>
+										<i class="fas fa-edit" style="cursor:pointer; margin-right: 10px; color: #0C6766;" data-toggle="modal" data-target="#ventana_modal" onclick="vistaActualizarProducto('<?php echo (int) $id_producto; ?>')" title="Actualizar"></i>
+										<i class="far fa-eye" style="cursor:pointer; margin-right: 10px;color: #697E0A;" data-toggle="modal" data-target="#ventana_modal" onclick="vistaConsultarProducto('<?php echo (int) $id_producto; ?>')" title="Consultar"></i>
+										<i class="fas fa-trash" style="cursor:pointer; margin-right: 10px;color: #870B0B;" data-toggle="modal" data-target="#ventana_modal" onclick="vistaEliminarProducto('<?php echo (int) $id_producto; ?>')" title="Eliminar "></i>
 
 									</td>
 								</tr>
@@ -391,13 +391,13 @@ class productos_VI
 				<form id="formulario_actualizar_productos" method="post">
 					<div class="row">
 						<div class="col-6">
-							<input type="hidden" id="id_producto" name="id_producto" value="<?php echo $id_producto; ?>">
+							<input type="hidden" id="id_producto" name="id_producto" value="<?php echo (int) $id_producto; ?>">
 							<label class="control-label">Código</label>
-							<input class="form-control form-control-lg" type="text" id="codigo" name="codigo" placeholder="Codgio" value="<?php echo $codigo; ?>" autocomplete="on" readonly><br>
+							<input class="form-control form-control-lg" type="text" id="codigo" name="codigo" placeholder="Codgio" value="<?php echo htmlspecialchars($codigo, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 							<label class="control-label">Referencia (Opcional)</label>
-							<input class="form-control form-control-lg" type="text" id="referencia" name="referencia" placeholder="Referencia" value="<?php echo $referencia; ?>" autocomplete="on"><br>
+							<input class="form-control form-control-lg" type="text" id="referencia" name="referencia" placeholder="Referencia" value="<?php echo htmlspecialchars($referencia, ENT_QUOTES); ?>" autocomplete="on"><br>
 							<label class="control-label">Descripción</label>
-							<input class="form-control form-control-lg" type="text" id="descripcion" name="descripcion" placeholder="Descripcion" value="<?php echo $descripcion; ?>" autocomplete="on"><br>
+							<input class="form-control form-control-lg" type="text" id="descripcion" name="descripcion" placeholder="Descripcion" value="<?php echo htmlspecialchars($descripcion, ENT_QUOTES); ?>" autocomplete="on"><br>
 							<label class="control-label">Proveedor</label>
 							<select class="form-control form-control-lg" name="proveedor" id="proveedor">
 								<option value="0" disabled selected>Proveedores:</option>
@@ -408,10 +408,11 @@ class productos_VI
 									foreach ($arreglo_proveedores as $objeto_proveedores) {
 										$id_proveedor = $objeto_proveedores->id_proveedor;
 										$nombre = $objeto_proveedores->nombre;
+										$nombre_esc = htmlspecialchars($nombre, ENT_QUOTES);
 										if ($nombre == $proveedor) {
-											echo "<option value='" . $proveedor . "' selected>" . $proveedor . "</option>";
+											echo "<option value='" . $nombre_esc . "' selected>" . $nombre_esc . "</option>";
 										} else {
-											echo "<option value='" . $nombre . "'>" . $nombre . "</option>";
+											echo "<option value='" . $nombre_esc . "'>" . $nombre_esc . "</option>";
 										}
 									}
 								}
@@ -427,10 +428,11 @@ class productos_VI
 									foreach ($arreglo_categorias as $objeto_categoria) {
 										$id_cat = $objeto_categoria->id_categoria;
 										$des = $objeto_categoria->descripcion;
+										$des_esc = htmlspecialchars($des, ENT_QUOTES);
 										if ($des == $categoria) {
-											echo "<option value='" . $categoria . "' selected>" . $categoria . "</option>";
+											echo "<option value='" . $des_esc . "' selected>" . $des_esc . "</option>";
 										} else {
-											echo "<option value='" . $des . "'>" . $des . "</option>";
+											echo "<option value='" . $des_esc . "'>" . $des_esc . "</option>";
 										}
 									}
 								}
@@ -439,11 +441,11 @@ class productos_VI
 						</div>
 						<div class="col-6">
 							<label class="control-label">Precio Costo</label>
-							<input class="form-control form-control-lg" type="text" id="precio_costo" name="precio_costo" placeholder="Precio costo" value="<?php echo $precio_costo; ?>" autocomplete="on"><br>
+							<input class="form-control form-control-lg" type="text" id="precio_costo" name="precio_costo" placeholder="Precio costo" value="<?php echo htmlspecialchars($precio_costo, ENT_QUOTES); ?>" autocomplete="on"><br>
 							<label class="control-label">Precio al público</label>
-							<input class="form-control form-control-lg" type="text" id="precio_general" name="precio_general" placeholder="Precio general" value="<?php echo $precio_general; ?>" autocomplete="on"><br>
+							<input class="form-control form-control-lg" type="text" id="precio_general" name="precio_general" placeholder="Precio general" value="<?php echo htmlspecialchars($precio_general, ENT_QUOTES); ?>" autocomplete="on"><br>
 							<label class="control-label">Precio Mayorista</label>
-							<input class="form-control form-control-lg" type="text" id="precio_mayorista" name="precio_mayorista" placeholder="Precio mayorista" value="<?php echo $precio_mayorista; ?>" autocomplete="on"><br>
+							<input class="form-control form-control-lg" type="text" id="precio_mayorista" name="precio_mayorista" placeholder="Precio mayorista" value="<?php echo htmlspecialchars($precio_mayorista, ENT_QUOTES); ?>" autocomplete="on"><br>
 							<label class="control-label">Ubicacion</label>
 							<select class="form-control form-control-lg" name="ubicacion" id="ubicacion">
 								<option value="0" disabled selected>Sección:</option>
@@ -534,7 +536,7 @@ class productos_VI
 							<div class="row">
 								<div class="col">
 									<label class="control-label">Cantidad</label>
-									<input class="form-control form-control-lg" type="text" id="cantidad" name="cantidad" placeholder="Cantidad" value="<?php echo $cantidad; ?>" autocomplete="on"><br>
+									<input class="form-control form-control-lg" type="text" id="cantidad" name="cantidad" placeholder="Cantidad" value="<?php echo htmlspecialchars($cantidad, ENT_QUOTES); ?>" autocomplete="on"><br>
 								</div>
 								<div class="col">
 									<button type="button" class="btn btn-primary float-center btn-lg" onclick="controladorActualizarProducto()"><i class="fas fa-save"></i> Guardar</button>
@@ -618,29 +620,29 @@ class productos_VI
 				<div class="row">
 					<div class="col-6">
 
-						<input type="hidden" id="id_producto" name="id_producto" value="<?php echo $id_producto; ?>">
+						<input type="hidden" id="id_producto" name="id_producto" value="<?php echo (int) $id_producto; ?>">
 						<label class="col-lg-3 control-label">Código</label>
-						<input class="form-control form-control-lg" type="text" id="codigo" name="codigo" value="<?php echo $codigo; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="codigo" name="codigo" value="<?php echo htmlspecialchars($codigo, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 						<label class="col-lg-3 control-label">Referencia</label>
-						<input class="form-control form-control-lg" type="text" id="referencia" name="referencia" placeholder="Referencia" value="<?php echo $referencia; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="referencia" name="referencia" placeholder="Referencia" value="<?php echo htmlspecialchars($referencia, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 						<label class="col-lg-3 control-label">Descripción</label>
-						<input class="form-control form-control-lg" type="text" id="descripcion" name="descripcion" placeholder="Descripcion" value="<?php echo $descripcion; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="descripcion" name="descripcion" placeholder="Descripcion" value="<?php echo htmlspecialchars($descripcion, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 						<label class="col-lg-3 control-label">Proveedor</label>
-						<input class="form-control form-control-lg" type="text" id="proveedor" name="proveedor" placeholder="Proveedor" value="<?php echo $proveedor; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="proveedor" name="proveedor" placeholder="Proveedor" value="<?php echo htmlspecialchars($proveedor, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 						<label class="col-lg-3 control-label">Categoria</label>
-						<input class="form-control form-control-lg" type="text" id="categoria" name="categoria" placeholder="Categoria" value="<?php echo $categoria; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="categoria" name="categoria" placeholder="Categoria" value="<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 					</div>
 					<div class="col-6">
 						<label class="col-lg-3 control-label">Cantidad</label>
-						<input class="form-control form-control-lg" type="text" id="cantidad" name="cantidad" placeholder="Cantidad" value="<?php echo $cantidad; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="cantidad" name="cantidad" placeholder="Cantidad" value="<?php echo htmlspecialchars($cantidad, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 						<label class="col-lg-4 control-label">Precio costo</label>
-						<input class="form-control form-control-lg" type="text" id="precio_costo" name="precio_costo" placeholder="Precio costo" value="<?php echo $precio_costo; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="precio_costo" name="precio_costo" placeholder="Precio costo" value="<?php echo htmlspecialchars($precio_costo, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 						<label class="col-lg-4 control-label">Precio general</label>
-						<input class="form-control form-control-lg" type="text" id="precio_general" name="precio_general" placeholder="Precio general" value="<?php echo $precio_general; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="precio_general" name="precio_general" placeholder="Precio general" value="<?php echo htmlspecialchars($precio_general, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 						<label class="col-lg-4 control-label">Precio mayorista</label>
-						<input class="form-control form-control-lg" type="text" id="precio_mayorista" name="precio_mayorista" placeholder="Precio mayorista" value="<?php echo $precio_mayorista; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="precio_mayorista" name="precio_mayorista" placeholder="Precio mayorista" value="<?php echo htmlspecialchars($precio_mayorista, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 						<label class="col-lg-4 control-label">Ubicacion</label>
-						<input class="form-control form-control-lg" type="text" id="ubicacion" name="ubicacion" placeholder="Ubicacion" value="<?php echo $ubicacion; ?>" autocomplete="on" readonly><br>
+						<input class="form-control form-control-lg" type="text" id="ubicacion" name="ubicacion" placeholder="Ubicacion" value="<?php echo htmlspecialchars($ubicacion, ENT_QUOTES); ?>" autocomplete="on" readonly><br>
 					</div>
 
 				</div>
@@ -671,7 +673,7 @@ class productos_VI
 			</div>
 			<div class="card-footer">
 				<form id="formulario_eliminar_productos" method="post">
-					<input type="hidden" id="id_producto" name="id_producto" value="<?php echo $id_producto; ?>">
+					<input type="hidden" id="id_producto" name="id_producto" value="<?php echo (int) $id_producto; ?>">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
 					<button type="button" class="btn btn-danger">Eliminar</button>
 				</form>
