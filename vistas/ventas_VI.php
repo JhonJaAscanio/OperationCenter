@@ -976,7 +976,7 @@ class ventas_VI
 		require_once "modelos/productos_MO.php";
 		$conexion = new servidor('A');
 		$productos_MO = new productos_MO($conexion);
-		$arreglo_productos = $productos_MO->seleccionar();
+		$arreglo_productos = $productos_MO->seleccionarConNombres();
 
 	?>
 		<div class="card card-success">
@@ -1005,21 +1005,21 @@ class ventas_VI
 								$codigo = $objeto_productos->codigo;
 								$referencia = $objeto_productos->referencia;
 								$descripcion = $objeto_productos->descripcion;
-								$Proveedor = $objeto_productos->proveedor;
+								$Proveedor = $objeto_productos->nombre_proveedor;
 								$cantidad = $objeto_productos->cantidad_bodega;
-								$categoria = $objeto_productos->categoria;
+								$categoria = $objeto_productos->nombre_categoria;
 								$precio_general = $objeto_productos->precio_general;
 
 
 						?>
 								<tr>
-									<td><?php echo $codigo; ?></td>
-									<td><?php echo $referencia; ?></td>
-									<td><?php echo $descripcion; ?></td>
-									<td><?php echo $Proveedor; ?></td>
-									<td><?php echo $categoria; ?></td>
-									<td><?php echo $cantidad; ?></td>
-									<td><?php echo $precio_general; ?></td>
+									<td><?php echo htmlspecialchars($codigo, ENT_QUOTES); ?></td>
+									<td><?php echo htmlspecialchars($referencia, ENT_QUOTES); ?></td>
+									<td><?php echo htmlspecialchars($descripcion, ENT_QUOTES); ?></td>
+									<td><?php echo htmlspecialchars($Proveedor, ENT_QUOTES); ?></td>
+									<td><?php echo htmlspecialchars($categoria, ENT_QUOTES); ?></td>
+									<td><?php echo (int) $cantidad; ?></td>
+									<td><?php echo htmlspecialchars($precio_general, ENT_QUOTES); ?></td>
 								</tr>
 						<?php
 							}

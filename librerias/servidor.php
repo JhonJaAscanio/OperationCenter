@@ -46,9 +46,20 @@ class servidor
     }
     // FIN CONSTRUCTOR
 
+    // Nota: desde PHP 8.1 PDO usa PDO::ERRMODE_EXCEPTION por defecto, asi que un
+    // fallo de query() no retorna false (el "or $this->errorQuery()" nunca se
+    // alcanza) sino que lanza PDOException. Se captura explicitamente para
+    // devolver el JSON de error esperado en vez de un stack trace crudo.
     function consulta($sql)
     {
-        $this->resultado=$this->conexion->query($sql) or $this->errorQuery();
+        try
+        {
+            $this->resultado = $this->conexion->query($sql);
+        }
+        catch (PDOException $pe)
+        {
+            $this->errorQuery();
+        }
 
         return $this->resultado->rowCount(); //Solo para los INSERT, UPDATE Y DELETE
 
@@ -58,10 +69,16 @@ class servidor
     // para evitar concatenar valores directamente en el SQL.
     function consultaPreparada($sql, $parametros = array())
     {
-        $sentencia = $this->conexion->prepare($sql) or $this->errorQuery();
-        $sentencia->execute($parametros) or $this->errorQuery();
-
-        $this->resultado = $sentencia;
+        try
+        {
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->execute($parametros);
+            $this->resultado = $sentencia;
+        }
+        catch (PDOException $pe)
+        {
+            $this->errorQuery();
+        }
 
         return $this->resultado->rowCount(); //Solo para los INSERT, UPDATE Y DELETE
     }

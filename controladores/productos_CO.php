@@ -1,26 +1,49 @@
 <?php
 	require_once "modelos/productos_MO.php";
 
-	$f=new funciones();	
+	$f=new funciones();
 	$f->limpiarMatriz($_POST);
 
 	class productos_CO
 	{
 		function __construct(){}
 
+		// Los campos opcionales llegan como '' cuando no se diligencian; se
+		// normalizan a NULL para que las columnas nullable de la BD queden
+		// vacias en vez de guardar un string vacio.
+		private function opcional($valor)
+		{
+			return ($valor === '' || $valor === null) ? null : $valor;
+		}
+
+		private function datosDesdePost()
+		{
+			return [
+				"codigo" => $_POST["codigo"],
+				"codigo_barras" => $this->opcional($_POST["codigo_barras"] ?? ''),
+				"referencia" => $_POST["referencia"],
+				"descripcion" => $_POST["descripcion"],
+				"id_proveedor" => $_POST["id_proveedor"],
+				"id_categoria" => $_POST["id_categoria"],
+				"id_marca" => $this->opcional($_POST["id_marca"] ?? ''),
+				"id_subcategoria" => $this->opcional($_POST["id_subcategoria"] ?? ''),
+				"precio_costo" => $_POST["precio_costo"],
+				"precio_general" => $_POST["precio_general"],
+				"precio_mayorista" => $_POST["precio_mayorista"],
+				"precio_promocional" => $this->opcional($_POST["precio_promocional"] ?? ''),
+				"cantidad_bodega" => $_POST["cantidad"],
+				"ubicacion" => $_POST["ubicacion"],
+				"peso" => $this->opcional($_POST["peso"] ?? ''),
+				"unidad_medida" => ($_POST["unidad_medida"] ?? '') !== '' ? $_POST["unidad_medida"] : 'UND',
+				"impuesto" => ($_POST["impuesto"] ?? '') !== '' ? $_POST["impuesto"] : 0,
+				"stock_minimo" => ($_POST["stock_minimo"] ?? '') !== '' ? $_POST["stock_minimo"] : 0,
+				"stock_maximo" => $this->opcional($_POST["stock_maximo"] ?? ''),
+			];
+		}
 
 		 function agregar()
     	{
 	        $codigo=$_POST["codigo"];
-	        $referencia=$_POST["referencia"];
-	        $descripcion=$_POST["descripcion"];
-	        $proveedor=$_POST["proveedor"];
-	        $categoria=$_POST["categoria"];
-	        $cantidad=$_POST["cantidad"];	   
-	        $precio_costo=$_POST["precio_costo"];	        
-	        $precio_general=$_POST["precio_general"];
-	        $precio_mayorista=$_POST["precio_mayorista"];
-	        $ubicacion=$_POST["ubicacion"];
          	$conexion=new servidor('A');
 			$productos_MO=new productos_MO($conexion);
 			$arreglo_productos=$productos_MO->unico($codigo);
@@ -34,20 +57,13 @@
         	}
 	        else
 	        {
-	            $filas_afectadas=$productos_MO->agregar( $codigo,$referencia,$descripcion,$proveedor,$categoria,$cantidad,$precio_costo,$precio_general, $precio_mayorista, $ubicacion);
+	            $filas_afectadas=$productos_MO->agregar($this->datosDesdePost());
 
 	            if($filas_afectadas)
 	            {
                 	$arreglo_productos=$productos_MO->seleccionar("codigo",$codigo);
 	              	$codigo = $arreglo_productos[0]->codigo;
-	                $referencia = $arreglo_productos[0]->referencia;
 	                $descripcion=$arreglo_productos[0]->descripcion;
-	                $proveedor=$arreglo_productos[0]->proveedor;
-	                $categoria = $arreglo_productos[0]->categoria;
-	                $cantidad = $arreglo_productos[0]->cantidad_bodega;
-	                $precio_costo = $arreglo_productos[0]->precio_costo;
-	                $precio_general=$arreglo_productos[0]->precio_general;
-	                $precio_mayorista=$arreglo_productos[0]->precio_mayorista;
 	                $fecha_creacion=$arreglo_productos[0]->fecha_creacion;
 	                $fecha_actualizacion = $arreglo_productos[0]->fecha_actualizacion;
    	                $respuesta = [
@@ -76,33 +92,24 @@
     	{
 			$id_producto=$_POST["id_producto"];
 			$codigo=$_POST["codigo"];
-	        $referencia=$_POST["referencia"];
-	        $descripcion=$_POST["descripcion"];
-	        $proveedor=$_POST["proveedor"];
-	        $categoria=$_POST["categoria"];
-	        $cantidad=$_POST["cantidad"];
-	        $precio_costo=$_POST["precio_costo"];	        
-	        $precio_general=$_POST["precio_general"];
-	        $precio_mayorista=$_POST["precio_mayorista"];
-	        $ubicacion=$_POST["ubicacion"];
 	        $conexion=new servidor('A');
 			$productos_MO=new productos_MO($conexion);
-			  
-					$filas_afectadas=$productos_MO->actualizar($id_producto,$referencia,$descripcion,$proveedor,$categoria,$cantidad,$precio_costo,$precio_general,$precio_mayorista,$ubicacion);
-	                if($filas_afectadas)
-	                {
-	                    $arreglo_productos=$productos_MO->seleccionar("codigo",$codigo);
-	                    $fecha_actualizacion=$arreglo_productos[0]->fecha_actualizacion;
 
-	                    $respuesta = [
-	                        "estado" => "EXITO",
-	                        'mensaje' => "EXITO: Registro Guardado",
-	                        'id_producto' => $id_producto,
-	                        'fecha_actualizacion' => $fecha_actualizacion
-	                    ];
-	                }
-	                else
-	                {
+			$filas_afectadas=$productos_MO->actualizar($id_producto, $this->datosDesdePost());
+                if($filas_afectadas)
+                {
+                    $arreglo_productos=$productos_MO->seleccionar("codigo",$codigo);
+                    $fecha_actualizacion=$arreglo_productos[0]->fecha_actualizacion;
+
+                    $respuesta = [
+                        "estado" => "EXITO",
+                        'mensaje' => "EXITO: Registro Guardado",
+                        'id_producto' => $id_producto,
+                        'fecha_actualizacion' => $fecha_actualizacion
+                    ];
+                }
+                else
+                {
                     $respuesta = [
                         "estado" => "ADVERTENCIA",
                         'mensaje' => "ADVERTENCIA: No ocurrieron cambios"
@@ -137,5 +144,31 @@
     	}
 
 
-    
+    	function activo()
+    	{
+    		$id_producto=$_POST["id_producto"];
+    		$estado=$_POST["estado"];
+    		$conexion=new servidor('A');
+			$productos_MO=new productos_MO($conexion);
+			$filas_afectadas=$productos_MO->activo($id_producto, $estado);
+
+			if($filas_afectadas)
+			{
+				$arreglo_productos=$productos_MO->seleccionar("id_producto", $id_producto);
+				$respuesta = [
+		            "estado" => "EXITO",
+		            'mensaje' => "EXITO: Registro Guardado",
+		            'id_producto' => $id_producto,
+		            'estado_producto' => $arreglo_productos[0]->estado
+		            ];
+			}else
+			{
+				$respuesta = [
+		            "estado" => "ADVERTENCIA",
+		            'mensaje' => "ADVERTENCIA: No ocurrieron cambios"
+		            ];
+			}
+			echo json_encode($respuesta);
+    	}
+
 	}

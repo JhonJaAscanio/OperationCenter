@@ -186,6 +186,20 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     </li>
 
                     <li class="nav-item ">
+                      <a href="#" class="nav-link" onclick="verModulo('subcategorias_VI/listar')">
+                        <i class="nav-icon fas fa-solid fa-sitemap"></i>
+                        <p>Subcategorias</p>
+                      </a>
+                    </li>
+
+                    <li class="nav-item ">
+                      <a href="#" class="nav-link" onclick="verModulo('marcas_VI/listar')">
+                        <i class="nav-icon fas fa-solid fa-tags"></i>
+                        <p>Marcas</p>
+                      </a>
+                    </li>
+
+                    <li class="nav-item ">
                       <a href="#" class="nav-link" onclick="verModulo('catalogos_VI/listar')">
                         <i class="nav-icon fas fa-cogs"></i>
                         <p>Catalogos</p>
